@@ -1,85 +1,8 @@
 import unittest2
 
-from pyhaml_jinja.errors import TemplateIndentationError, TemplateSyntaxError
+from pyhaml_jinja import nodes
+from pyhaml_jinja.errors import TemplateSyntaxError
 from pyhaml_jinja.parser import Parser
-from pyhaml_jinja.nodes import Node, EmptyNode, HtmlNode, TextNode
-
-
-class TestParserGetSourceLines(unittest2.TestCase):
-
-  def test_empty(self):
-    self.assertEqual([''], Parser.get_source_lines(''))
-    self.assertEqual([''], Parser.get_source_lines(None))
-
-  def test_basic(self):
-    source = (
-        '%div\n'
-        '  text\n'
-        '%p\n'
-        '  %p\n'
-        '    nested-text\n'
-        )
-
-    lines = Parser.get_source_lines(source)
-    self.assertEqual(5, len(lines))
-    self.assertEqual(['%div', '  text', '%p', '  %p', '    nested-text'], lines)
-
-  def test_comment(self):
-    source = (
-        '%div\n'
-        '; comment\n'
-        '  text\n'
-        )
-    lines = Parser.get_source_lines(source)
-    self.assertEqual(3, len(lines))
-    self.assertEqual(['%div', '; comment', '  text'], lines)
-
-  def test_line_continuation(self):
-    source = (
-        '%div(a="1", \\\n'
-        '     b="2")\n'
-        '  text\n'
-        )
-    lines = Parser.get_source_lines(source)
-    self.assertEqual(3, len(lines))
-    self.assertEqual(['%div(a="1", b="2")', '', '  text'], lines)
-
-
-class TestParserGetIndentLevel(unittest2.TestCase):
-
-  def test_empty(self):
-    self.assertEqual(0, Parser.get_indent_level(''))
-    self.assertEqual(0, Parser.get_indent_level('f'))
-  
-  def test_four(self):
-    self.assertEqual(4, Parser.get_indent_level('    f'))
-
-  def test_whitespace_only(self):
-    # get_source_lines should strip these, but get_indent_level respects
-    # whitespace-only lines.
-    self.assertEqual(4, Parser.get_indent_level('    '))
-
-  def test_mixed_tabs_and_spaces_raises_error(self):
-    with self.assertRaises(ValueError):
-      Parser.get_indent_level('  \t  foo')
-
-  def test_mixed_tabs_and_spaces_raises_indentation_error_in_build_tree(self):
-    source = (
-        '  \ttext\n'
-        )
-    with self.assertRaises(TemplateIndentationError):
-      Parser.build_tree(source)
-
-  def test_invalid_indentation_raises_error(self):
-    source = (
-        '%div\n'
-        '  f\n'
-        ' f\n'
-        '       f\n'
-        '    f\n'
-        )
-    with self.assertRaises(TemplateIndentationError):
-      Parser.build_tree(source)
 
 
 class TestParserBuildTree(unittest2.TestCase):
@@ -88,7 +11,7 @@ class TestParserBuildTree(unittest2.TestCase):
     tree = Parser.build_tree('')
     self.assertTrue(tree.has_children())
     self.assertEqual(1, len(tree.get_children()))
-    self.assertIsInstance(tree.get_children()[0], EmptyNode)
+    self.assertIsInstance(tree.get_children()[0], nodes.EmptyNode)
 
   def test_single_child(self):
     source = ('%div')
@@ -248,85 +171,4 @@ class TestParserBuildTree(unittest2.TestCase):
     tree = Parser.build_tree(source)
     lines = tree.render_lines()
     self.assertEqual(['{% extends "base.haml" %}', 'text'], lines)
-
-
-
-class TestParserParseLine(unittest2.TestCase):
-
-  def test_single_html_tag(self):
-    line = '%div'
-    node = Parser.parse_line(line)
-    self.assertFalse(node.has_children())
-    self.assertIsInstance(node, HtmlNode)
-    self.assertEqual('div', node.tag)
-    self.assertEqual({}, node.attributes)
-
-  def test_shortcut_class(self):
-    line = '.cls'
-    node = Parser.parse_line(line)
-    self.assertIsInstance(node, HtmlNode)
-    self.assertFalse(node.has_children())
-    self.assertEqual('div', node.tag)
-    self.assertEqual({'class': 'cls'}, node.attributes)
-
-  def test_shortcut_id(self):
-    line = '#myid'
-    node = Parser.parse_line(line)
-    self.assertIsInstance(node, HtmlNode)
-    self.assertFalse(node.has_children())
-    self.assertEqual('div', node.tag)
-    self.assertEqual({'id': 'myid'}, node.attributes)
-
-  def test_text(self):
-    line = 'this is some text'
-    node = Parser.parse_line(line)
-    self.assertIsInstance(node, TextNode)
-    self.assertEqual('this is some text', node.data)
-
-
-class TestParserRenderHtml(unittest2.TestCase):
-
-  def test_basic(self):
-    source = (
-        '%div\n'
-        '  text\n'
-        )
-    parser = Parser(source)
-    html = parser.render()
-    self.assertEqual('<div>text</div>', html)
-
-  def test_with_newlines(self):
-    source = (
-        '%div\n'
-        '  %p text\n'
-        '  text2\n'
-        )
-    parser = Parser(source, newline_string='\n')
-    html = parser.render()
-    self.assertEqual((
-      '<div>\n'
-      '<p>\n'
-      'text\n'
-      '</p>\n'
-      'text2\n'
-      '</div>'
-      ), html)
-
-  def test_with_newlines_and_indentation(self):
-    source = (
-        '%div\n'
-        '  %p text\n'
-        '  text2\n'
-        )
-    parser = Parser(source, newline_string='\n', indent_string='  ')
-    html = parser.render()
-    self.assertEqual((
-      '<div>\n'
-      '  <p>\n'
-      '    text\n'
-      '  </p>\n'
-      '  text2\n'
-      '</div>'
-      ), html)
-
 
