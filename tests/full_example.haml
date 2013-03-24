@@ -1,0 +1,111 @@
+%html
+  %div
+    Test 3
+  %div
+    %h1
+      Test 6
+  %div: %p Test 7
+  %p
+    Test 9
+  #test(class="test")
+    Test 11
+  .test.test2(id="test")
+    Test 13
+  %p: %span.test
+    Test 15
+  %p: %span.test Test 16
+  %p: %span.test(id="test"): Test 17
+  %div(class="cls") Test 18
+  .test
+    Test 20
+  #test
+    Test 22
+  .cls Test 23
+  .cls.cls1
+    Test 25
+  #test.test
+    Test 27
+  .test#test
+    Test 29
+  .test#test.test2
+    Test 31
+  #test.test.test2
+    Test 33
+  #test.test Test 34
+  .test#test Test 35
+  .test.test2#test Test 36
+  .test#test.test2 Test 37
+  #test Test 38
+  %hr
+  %br
+  %input(name="foo")
+  %meta(name="description")
+  %link(rel="stylesheet")
+  %img(src="test")
+  %script(type="text/javascript")
+  -extends "base.haml"
+  -import "test.haml" as test
+  -from "test.haml" import test
+  -set i=1
+  -do test.append(1)
+  -continue
+  -break
+  -macro test(name)
+    %p #{name}
+    Test 55
+  #{name}
+  #{test(test)}
+  -block test
+  -block test2: Test 58
+  -if True
+    Test 61
+  -elif True
+    Test 63
+  -elif True
+    Test 65
+  -else
+    Test 67
+  -if True
+    Test 69
+  -else
+    Test 71
+  -trans count=i
+    Test 73 #{i}
+  -pluralize
+    Test 75 #{i}
+  -for i in range(20)
+    -if True
+      Test 78 #{i}
+    -elif True
+      Test 80
+    -else
+      -if nested
+        Test 83
+  -else
+    Test 85
+  %div(a="1", \
+       b="2", \
+       c="3")
+    %p Test 89
+  %div( \
+       a="1")
+    Test 92
+  %pre
+    |Text 94
+    |  Text 95
+    | Text 96
+    |Text 97
+    |      Text 98
+  Text 99
+  |Text 100
+  |      Text 101
+  -if True
+    |Text 103
+  ; Text 104
+  Text 105
+  \%div
+  \-if True
+  \#div
+  \| Text 109
+  ! Text 110
+
