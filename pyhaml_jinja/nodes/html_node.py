@@ -1,3 +1,5 @@
+"""Nodes that render into HTML tags."""
+
 import re
 
 from pyhaml_jinja.nodes.node import Node
@@ -9,15 +11,16 @@ __all__ = ['HtmlNode', 'SelfClosingHtmlNode']
 
 
 class HtmlNode(Node):
+  """Represents a standard HTML node with a tag, attributes, and children."""
 
   TAG_REGEX = re.compile(
-      '^' # Start of the line
-      '%' # % is required
-      '(?P<tag>\w+)' # tag name is required
-      '(?P<shortcut_attrs>[\.#][^()]+?)?' # .cls1.cls2#id is optional
-      '(?P<attrs>\(.+?\))?' # (a="1", b="2") are optional
-      '(?P<content>\s+.+)?' # Inline-content is optional
-      '$' # End of the line
+      r'^'  # Start of the line
+      r'%'  # % is required
+      r'(?P<tag>\w+)'  # tag name is required
+      r'(?P<shortcut_attrs>[\.#][^()]+?)?'  # .cls1.cls2#id is optional
+      r'(?P<attrs>\(.+?\))?'  # (a="1", b="2") are optional
+      r'(?P<content>\s+.+)?'  # Inline-content is optional
+      r'$'  # End of the line
   )
 
   SELF_CLOSING_TAGS = ['br', 'hr', 'img', 'input', 'link', 'meta']
@@ -28,18 +31,26 @@ class HtmlNode(Node):
     super(HtmlNode, self).__init__()
 
   def add_attribute(self, key, value):
+    """Safely add an attribute to this node.
+
+    Raises an exception if you try to clobber a variable (not class).
+    If you add an extra class, appends it correctly to the existing class.
+    """
     if key == 'class':
       # Class is a special one, which can be defined multiple times (and
       # should be appended with spaces in-between).
       value = self.attributes.get('class', '') + ' ' + value
 
     elif key in self.attributes:
-        raise KeyError('Attribute %s already defined on node %s!' % (key, self))
+      raise KeyError(
+          'Attribute %s already defined on node %s!' % (key, self))
 
     self.attributes[key] = value.strip()
 
   @classmethod
   def from_haml(cls, haml):
+    """Given a line of HAML markup, return the correct HtmlNode."""
+
     # You can omit the % if and only if the line starts with a '.' or '#'.
     if haml and not haml.startswith('%') and haml[0] in ('.', '#'):
       haml = '%div' + haml
@@ -47,11 +58,11 @@ class HtmlNode(Node):
     # Handle nested tags on the same line by splitting into chunks and
     # processing each line separately, then appending down the tree.
     # NOTE: Nested tags must *all* be of the same type.
-    if re.match('^[^\s]+:\s+', haml):
+    if re.match(r'^[^\s]+:\s+', haml):
       root = None
       parent = None
 
-      for line in re.split(':\s+', haml):
+      for line in re.split(r':\s+', haml):
         child = cls.from_haml(line)
 
         if not root:
@@ -63,13 +74,13 @@ class HtmlNode(Node):
           parent.add_child(child)
 
         parent = child
-      
+
       return root
 
     match = cls.TAG_REGEX.match(haml)
     if not match:
       raise ValueError('Text did not match %s' % cls.TAG_REGEX.pattern)
-    
+
     # Create the node with the proper tag
     tag = match.group('tag')
 
@@ -134,12 +145,13 @@ class HtmlNode(Node):
 
 
 class SelfClosingHtmlNode(HtmlNode, ChildlessNode):
+  """An HtmlNode that closes itself (<hr />)."""
 
   def render_start(self):
     tag = self.tag
     attributes = self.render_attributes()
     return '<%s />' % ' '.join([tag, attributes]).strip()
-  
+
   def render_end(self):
     return None
 

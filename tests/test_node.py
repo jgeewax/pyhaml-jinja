@@ -12,7 +12,7 @@ class TestNode(unittest2.TestCase):
   def test_node_has_children(self):
     node = nodes.Node()
     self.assertFalse(node.has_children())
-    
+
     node.add_child(nodes.Node())
     self.assertTrue(node.has_children())
 

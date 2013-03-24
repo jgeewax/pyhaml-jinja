@@ -34,7 +34,8 @@ class TestHtmlNode(unittest2.TestCase):
 
   def test_private_render_attributes(self):
     attributes = {'a': '1', 'b': '2'}
-    self.assertEqual('a="1" b="2"', nodes.HtmlNode._render_attributes(attributes))
+    self.assertEqual('a="1" b="2"',
+                     nodes.HtmlNode._render_attributes(attributes))
 
     self.assertEqual('', nodes.HtmlNode._render_attributes({}))
     self.assertEqual('', nodes.HtmlNode._render_attributes(None))
@@ -103,7 +104,7 @@ class TestHtmlNode(unittest2.TestCase):
     self.assertIsInstance(node, nodes.HtmlNode)
     self.assertEqual('div', node.tag)
     self.assertEqual({'class': 'cls', 'a': '1', 'b': '2'}, node.attributes)
-  
+
   def test_from_haml_with_attrs_including_commas(self):
     haml = '%div(a="1", b="with, commas")'
     node = nodes.HtmlNode.from_haml(haml)
@@ -118,7 +119,7 @@ class TestHtmlNode(unittest2.TestCase):
     self.assertEqual('div', node.tag)
     self.assertEqual({}, node.attributes)
     self.assertTrue(node.has_children())
-    
+
     child = node.get_children()[0]
     self.assertIsInstance(child, nodes.TextNode)
     self.assertEqual('inline content', child.data)

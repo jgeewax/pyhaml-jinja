@@ -5,6 +5,10 @@ from pyhaml_jinja import nodes
 
 class TestJinjaNode(unittest2.TestCase):
 
+  def test_repr(self):
+    node = nodes.JinjaNode('extends')
+    self.assertEqual('<JinjaNode: extends  0 children>', repr(node))
+
   def test_render_start_just_tag(self):
     node = nodes.JinjaNode('block')
     self.assertEqual('{% block %}', node.render_start())

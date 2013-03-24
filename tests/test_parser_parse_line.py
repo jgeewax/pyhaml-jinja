@@ -6,6 +6,11 @@ from pyhaml_jinja.parser import Parser
 
 class TestParserParseLine(unittest2.TestCase):
 
+  def test_empty_line(self):
+    line = ''
+    node = Parser.parse_line(line)
+    self.assertIsInstance(node, nodes.EmptyNode)
+
   def test_single_html_tag(self):
     line = '%div'
     node = Parser.parse_line(line)
@@ -29,6 +34,14 @@ class TestParserParseLine(unittest2.TestCase):
     self.assertFalse(node.has_children())
     self.assertEqual('div', node.tag)
     self.assertEqual({'id': 'myid'}, node.attributes)
+
+  def test_jinja_line(self):
+    line = '-extends "base.haml"'
+    node = Parser.parse_line(line)
+    self.assertIsInstance(node, nodes.JinjaNode)
+    self.assertEqual('extends', node.tag)
+    self.assertEqual('"base.haml"', node.data)
+    self.assertFalse(node.has_children())
 
   def test_text(self):
     line = 'this is some text'

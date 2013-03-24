@@ -1,7 +1,7 @@
 import unittest2
 
 from pyhaml_jinja import nodes
-from pyhaml_jinja.errors import TemplateSyntaxError
+from pyhaml_jinja.errors import TemplateIndentationError, TemplateSyntaxError
 from pyhaml_jinja.parser import Parser
 
 
@@ -19,6 +19,11 @@ class TestParserBuildTree(unittest2.TestCase):
     self.assertTrue(tree.has_children())
     self.assertEqual(1, len(tree.get_children()))
 
+    node = tree.get_children()[0]
+    self.assertIsInstance(node, nodes.HtmlNode)
+    self.assertEqual('div', node.tag)
+    self.assertEqual({}, node.attributes)
+
   def test_single_line_continuation(self):
     source = (
         '%div(a="1", \\ \n'
@@ -28,11 +33,25 @@ class TestParserBuildTree(unittest2.TestCase):
     self.assertTrue(tree.has_children())
     self.assertEqual(1, len(tree.get_children()))
 
-  def test_tree_basic(self):
+    node = tree.get_children()[0]
+    self.assertIsInstance(node, nodes.HtmlNode)
+    self.assertEqual('div', node.tag)
+    self.assertEqual({'a': '1', 'b': '2'}, node.attributes)
+
+  def test_inline_content(self):
     source = '%div.cls inline content'
     tree = Parser.build_tree(source)
-    lines = tree.render_lines()
-    self.assertEqual(['<div class="cls">', 'inline content', '</div>'], lines)
+    self.assertEqual(1, len(tree.get_children()))
+
+    node = tree.get_children()[0]
+    self.assertIsInstance(node, nodes.HtmlNode)
+    self.assertEqual('div', node.tag)
+    self.assertEqual({'class': 'cls'}, node.attributes)
+
+    self.assertEqual(1, len(node.get_children()))
+    text_node = node.get_children()[0]
+    self.assertIsInstance(text_node, nodes.TextNode)
+    self.assertEqual('inline content', text_node.data)
 
   def test_tree_nested(self):
     source = (
@@ -60,7 +79,7 @@ class TestParserBuildTree(unittest2.TestCase):
                      lines)
 
   def test_tree_invalid_attributes(self):
-    source = '%div(a="1" b="2")' # Missing comma!
+    source = '%div(a="1" b="2")'  # Missing comma!
     with self.assertRaises(TemplateSyntaxError):
       tree = Parser.build_tree(source)
 
@@ -73,7 +92,25 @@ class TestParserBuildTree(unittest2.TestCase):
     lines = tree.render_lines()
     self.assertEqual(['text on base line', 'indented for no good reason'],
                      lines)
-  
+
+  def test_mixed_tabs_and_spaces(self):
+    source = (
+        '  \ttext\n'
+        )
+    with self.assertRaises(TemplateIndentationError):
+      Parser.build_tree(source)
+
+  def test_invalid_indentation(self):
+    source = (
+        '%div\n'
+        '  f\n'
+        ' f\n'
+        '       f\n'
+        '    f\n'
+        )
+    with self.assertRaises(TemplateIndentationError):
+      Parser.build_tree(source)
+
   def test_tree_text_with_html_child(self):
     source = (
         'text on base line\n'
@@ -139,7 +176,7 @@ class TestParserBuildTree(unittest2.TestCase):
     tree = Parser.build_tree(source)
     lines = tree.render_lines()
     self.assertEqual(['{% for item in list %}', 'item', '{% endfor %}'], lines)
-  
+
   def test_tree_jinja_tag_for_else(self):
     source = (
         '-for item in list\n'

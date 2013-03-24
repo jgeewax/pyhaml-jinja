@@ -1,12 +1,14 @@
+"""Convenience imports of all node types"""
+
 # Base node
-from node import *
+from pyhaml_jinja.nodes.node import Node
 
 # Simple nodes
-from childless_node import *
-from empty_node import *
-from text_node import *
+from pyhaml_jinja.nodes.childless_node import ChildlessNode
+from pyhaml_jinja.nodes.empty_node import EmptyNode
+from pyhaml_jinja.nodes.text_node import TextNode
 
 # Complex nodes
-from html_node import *
-from jinja_node import *
+from pyhaml_jinja.nodes.html_node import HtmlNode, SelfClosingHtmlNode
+from pyhaml_jinja.nodes.jinja_node import JinjaNode, SelfClosingJinjaNode
 

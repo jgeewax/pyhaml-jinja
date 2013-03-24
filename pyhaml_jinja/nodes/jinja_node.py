@@ -1,3 +1,5 @@
+"""Nodes to be converted to Jinja tags."""
+
 import re
 
 from pyhaml_jinja.nodes.node import Node
@@ -7,13 +9,14 @@ __all__ = ['JinjaNode', 'SelfClosingJinjaNode']
 
 
 class JinjaNode(Node):
+  """Represents a node that will be rendered as a Jinja tag."""
 
   TAG_REGEX = re.compile(
-      '^' # Start of the line
-      '-' # - is required
-      '(?P<tag>\w+)' # Tag name is required
-      '(?P<data>\s+.+)?' # Data is optional
-      '$' # End of the line
+      r'^'  # Start of the line
+      r'-'  # - is required
+      r'(?P<tag>\w+)'  # Tag name is required
+      r'(?P<data>\s+.+)?'  # Data is optional
+      r'$'  # End of the line
   )
 
   SELF_CLOSING_TAGS = ['break', 'continue', 'do', 'extends', 'from', 'import',
@@ -39,6 +42,8 @@ class JinjaNode(Node):
 
   @classmethod
   def from_haml(cls, haml):
+    """Given a line of HAML markup parse it into a Jinja node."""
+
     match = cls.TAG_REGEX.match(haml)
     if not match:
       raise ValueError('Text did not match %s' % cls.TAG_REGEX.pattern)
@@ -60,7 +65,7 @@ class JinjaNode(Node):
       return False
 
     return self.tag in self.EXTENDING_TAGS.get(node.tag, [])
-  
+
   def render_start(self):
     return '{%% %s %%}' % ' '.join([self.tag, self.data or '']).strip()
 
@@ -68,7 +73,8 @@ class JinjaNode(Node):
     # Look at our next sibling. If they are extending us, don't return an end
     # tag.
     next_sibling = self.get_next_sibling()
-    if isinstance(next_sibling, self.__class__) and next_sibling.is_extending(self):
+    if (isinstance(next_sibling, self.__class__) and
+        next_sibling.is_extending(self)):
       return None
 
     # If we *are* going to close this tag, get to the root of the sibling that
@@ -83,6 +89,7 @@ class JinjaNode(Node):
 
 
 class SelfClosingJinjaNode(JinjaNode):
+  """A Jinja tag that closes itself (-extends "base.haml")."""
 
   def render_end(self):
     return None

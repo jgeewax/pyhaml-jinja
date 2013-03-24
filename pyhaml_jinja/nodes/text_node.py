@@ -1,3 +1,5 @@
+"""Represents a line of text."""
+
 from pyhaml_jinja.nodes.node import Node
 
 
@@ -5,17 +7,18 @@ __all__ = ['TextNode']
 
 
 class TextNode(Node):
+  """Represents a node that contains text only.
 
-  """TextNodes can actually have children.
-  
+  TextNodes can actually have children.
   If there are tags we don't understand, we shouldn't get in the way::
-    
+
     {#$% if True %$#}
       %div
         content
     {#$% endif %$#}
-  
-  might be perfectly valid, and is technically a TextNode -> HtmlNode -> TextNode.
+
+  might be perfectly valid, and is technically a TextNode -> HtmlNode ->
+  TextNode.
   """
 
   def __init__(self, data):
