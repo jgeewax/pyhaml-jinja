@@ -44,6 +44,29 @@ class JinjaNode(Node):
   def from_haml(cls, haml):
     """Given a line of HAML markup parse it into a Jinja node."""
 
+    # Handle nested tags on the same line by splitting into chunks and
+    # processing each line separately, then appending down the tree.
+    if ':' in haml:
+      root = None
+      parent = None
+
+      for line in re.split(r':\s+', haml):
+        # This needs to be here to avoid circular imports.
+        from pyhaml_jinja.parser import Parser
+        child = Parser.parse_line(line)
+
+        if not root:
+          root = child
+
+        if parent:
+          # This may raise an exception if it turns out that parent is not
+          # permitted to have children.
+          parent.add_child(child)
+
+        parent = child
+
+      return root
+
     match = cls.TAG_REGEX.match(haml)
     if not match:
       raise ValueError('Text did not match %s' % cls.TAG_REGEX.pattern)

@@ -12,7 +12,10 @@ class Parser(object):
   LINE_CONTINUATION = '\\'  # Backslash for line continuations.
   LINE_COMMENT = ';'  # Color for line comments.
   HTML_TAG_PREFIX = '%'  # Haml standard is to use % to start HTML tags.
+  HTML_COMMENT_PREFIX = '!'  # ! to start an HTML comment.
   JINJA_TAG_PREFIX = '-'  # Use hypens to start Jinja code.
+  PREFORMATTED_PREFIX = '|'  # Use pipes to distinguish preformatted lines.
+  ESCAPE_PREFIX = '\\'  # Backslash to use a special prefix character.
 
   def __init__(self, source):
     self.source = source
@@ -28,7 +31,7 @@ class Parser(object):
     indent_stack = [-1]
     node_stack = [root]
 
-    for line_number, line in enumerate(source_lines):
+    for line_number, line in enumerate(source_lines, start=1):
 
       try:
         node = cls.parse_line(line.strip())
@@ -38,6 +41,12 @@ class Parser(object):
       if isinstance(node, nodes.EmptyNode):
         node_stack[-1].add_child(node)
         continue
+
+      # If this was a nested line, we should have a chain of single children
+      # for as many levels as nested tags.
+      child = node
+      while child.has_children():
+        child = child.get_children()[0]
 
       try:
         indent = cls.get_indent_level(line)
@@ -69,7 +78,7 @@ class Parser(object):
 
       # Insert the child as always and move down the tree.
       parent_node.add_child(node)
-      node_stack.append(node)
+      node_stack.append(child)
 
     return root
 
@@ -84,8 +93,14 @@ class Parser(object):
       return nodes.EmptyNode()
     elif line[0] in (cls.HTML_TAG_PREFIX, '.', '#'):
       return nodes.HtmlNode.from_haml(line)
-    elif line[0] in cls.JINJA_TAG_PREFIX:
+    elif line[0] in (cls.HTML_COMMENT_PREFIX, ):
+      return nodes.HtmlCommentNode(line[1:])
+    elif line[0] in (cls.JINJA_TAG_PREFIX, ):
       return nodes.JinjaNode.from_haml(line)
+    elif line[0] in (cls.PREFORMATTED_PREFIX, ):
+      return nodes.PreformattedTextNode(line[1:])
+    elif line[0] in (cls.ESCAPE_PREFIX, ):
+      return nodes.TextNode(line[1:])
     else:
       return nodes.TextNode(line)
 
@@ -117,11 +132,18 @@ class Parser(object):
     for line in source_lines:
       line = line.rstrip()  # Remove trailing whitespace.
 
+      # Handle Jinja variables.
+      line = re.sub(r'#{(.+?)}', r'{{ \1 }}', line)
+
+      # Handle comment lines (Jinja comments should be done as usual).
+      if line.strip().startswith(cls.LINE_COMMENT):
+        lines.append('')
+
       # Make sure to handle line-continuations.
       # If the current line ends in a continuation, strip and append to the
       # builder.
-      if line.endswith(cls.LINE_CONTINUATION):
-        line_builder.append(line[:-1].strip())
+      elif line.endswith(cls.LINE_CONTINUATION):
+        line_builder.append(line[:-1].rstrip())
 
       # If the line *doesn't* end in a continuation, but we have data in the
       # builder, wrap things up.

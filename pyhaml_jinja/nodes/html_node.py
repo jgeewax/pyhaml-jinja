@@ -4,10 +4,10 @@ import re
 
 from pyhaml_jinja.nodes.node import Node
 from pyhaml_jinja.nodes.childless_node import ChildlessNode
-from pyhaml_jinja.nodes.text_node import TextNode
+from pyhaml_jinja.nodes.text_node import TextNode, PreformattedTextNode
 
 
-__all__ = ['HtmlNode', 'SelfClosingHtmlNode']
+__all__ = ['HtmlNode', 'SelfClosingHtmlNode', 'HtmlCommentNode']
 
 
 class HtmlNode(Node):
@@ -57,13 +57,14 @@ class HtmlNode(Node):
 
     # Handle nested tags on the same line by splitting into chunks and
     # processing each line separately, then appending down the tree.
-    # NOTE: Nested tags must *all* be of the same type.
     if re.match(r'^[^\s]+:\s+', haml):
       root = None
       parent = None
 
       for line in re.split(r':\s+', haml):
-        child = cls.from_haml(line)
+        # This needs to be here to avoid circular imports.
+        from pyhaml_jinja.parser import Parser
+        child = Parser.parse_line(line)
 
         if not root:
           root = child
@@ -138,7 +139,15 @@ class HtmlNode(Node):
   def render_start(self):
     tag = self.tag
     attributes = self.render_attributes()
-    return '<%s>' % ' '.join([tag, attributes]).strip()
+    start = '<%s>' % ' '.join([tag, attributes]).strip()
+
+    # Special case for our first child being a PreformattedTextNode.
+    if self.has_children():
+      first_child = self.get_children()[0]
+      if isinstance(first_child, PreformattedTextNode):
+        start += first_child.render_start(force=True)
+
+    return start
 
   def render_end(self):
     return '</{tag}>'.format(tag=self.tag)
@@ -154,4 +163,12 @@ class SelfClosingHtmlNode(HtmlNode, ChildlessNode):
 
   def render_end(self):
     return None
+
+
+class HtmlCommentNode(TextNode, ChildlessNode):
+  """An Html Comment node."""
+
+  def render_start(self):
+    start = super(HtmlCommentNode, self).render_start()
+    return '<!-- %s -->' % start.strip()
 

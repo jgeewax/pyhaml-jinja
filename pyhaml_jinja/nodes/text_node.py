@@ -3,7 +3,7 @@
 from pyhaml_jinja.nodes.node import Node
 
 
-__all__ = ['TextNode']
+__all__ = ['TextNode', 'PreformattedTextNode']
 
 
 class TextNode(Node):
@@ -27,4 +27,23 @@ class TextNode(Node):
 
   def render_start(self):
     return self.data
+
+
+class PreformattedTextNode(TextNode):
+  """Represents a text node with pre-formatted text."""
+
+  def get_indent(self, *args, **kwargs):
+    """No matter what, ignore the indent level render_lines() wants."""
+    return ''
+
+  def render_start(self, force=False):
+    from pyhaml_jinja import nodes
+
+    # Special case if we are the first child of an HtmlNode (the parent has
+    # already taken care of rendering us).
+    if (not force and isinstance(self.parent, nodes.HtmlNode) and
+        self.get_previous_sibling() is None):
+      return None
+    else:
+      return super(PreformattedTextNode, self).render_start()
 

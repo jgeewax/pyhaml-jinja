@@ -20,3 +20,7 @@ class Renderer(object):
                                           indent_level=-1)
     return self.newline_string.join(lines)
 
+
+def render(source, newline_string='\n', indent_string='  '):
+  return Renderer(source, newline_string, indent_string).render()
+

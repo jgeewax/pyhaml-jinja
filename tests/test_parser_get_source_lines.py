@@ -39,7 +39,7 @@ class TestParserGetSourceLines(unittest2.TestCase):
         )
     lines = Parser.get_source_lines(source)
     self.assertEqual(3, len(lines))
-    self.assertEqual(['%div', '; comment', '  text'], lines)
+    self.assertEqual(['%div', '', '  text'], lines)
 
   def test_line_continuation(self):
     source = (
@@ -57,4 +57,23 @@ class TestParserGetSourceLines(unittest2.TestCase):
         )
     with self.assertRaises(TemplateSyntaxError):
       Parser.get_source_lines(source)
+
+  def test_line_continuation_indented_properly(self):
+    source = (
+        '%div\n'
+        '  %p(a="1", \\ \n'
+        '     b="2")\n'
+        '    Text\n'
+        )
+    lines = Parser.get_source_lines(source)
+    self.assertEqual(['%div', '  %p(a="1", b="2")', '', '    Text'], lines)
+
+  def test_jinja_variables(self):
+    source = '#{var} #{var2}'
+    lines = Parser.get_source_lines(source)
+    self.assertEquals(['{{ var }} {{ var2 }}'], lines)
+
+    source = '%hr(class="#{class}")'
+    lines = Parser.get_source_lines(source)
+    self.assertEqual(['%hr(class="{{ class }}")'], lines)
 

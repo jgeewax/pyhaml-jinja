@@ -144,6 +144,21 @@ class TestHtmlNode(unittest2.TestCase):
     self.assertEqual({}, child.attributes)
     self.assertFalse(child.has_children())
 
+  def test_from_haml_with_nested_html_and_jinja_tags(self):
+    haml = '%div: -block my_block'
+    node = nodes.HtmlNode.from_haml(haml)
+    self.assertIsInstance(node, nodes.HtmlNode)
+    self.assertEqual('div', node.tag)
+    self.assertEqual({}, node.attributes)
+    self.assertTrue(node.has_children())
+    self.assertEqual(1, len(node.get_children()))
+
+    child = node.get_children()[0]
+    self.assertIsInstance(child, nodes.JinjaNode)
+    self.assertEqual('block', child.tag)
+    self.assertEqual('my_block', child.data)
+    self.assertFalse(child.has_children())
+
   def test_from_haml_not_nested_but_with_colon(self):
     haml = '%div my inline text: is here'
     node = nodes.HtmlNode.from_haml(haml)

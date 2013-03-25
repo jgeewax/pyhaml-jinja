@@ -43,3 +43,38 @@ class TestJinjaNode(unittest2.TestCase):
     self.assertEqual('"base.haml"', node.data)
     self.assertIsInstance(node, nodes.SelfClosingJinjaNode)
 
+  def test_from_haml_inline_content(self):
+    haml = '-if a == "2": text'
+    node = nodes.JinjaNode.from_haml(haml)
+    self.assertIsInstance(node, nodes.JinjaNode)
+    self.assertEqual('if', node.tag)
+    self.assertEqual('a == "2"', node.data)
+    self.assertTrue(node.has_children())
+    self.assertEqual(1, len(node.get_children()))
+
+    child = node.get_children()[0]
+    self.assertIsInstance(child, nodes.TextNode)
+    self.assertEqual('text', child.data)
+    self.assertFalse(child.has_children())
+
+  def test_from_haml_nested_jinja_tags(self):
+    haml = '-if a == "2": -if b == "3": content'
+    node = nodes.JinjaNode.from_haml(haml)
+    self.assertIsInstance(node, nodes.JinjaNode)
+    self.assertEqual('if', node.tag)
+    self.assertEqual('a == "2"', node.data)
+    self.assertTrue(node.has_children())
+    self.assertEqual(1, len(node.get_children()))
+
+    child1 = node.get_children()[0]
+    self.assertIsInstance(child1, nodes.JinjaNode)
+    self.assertEqual('if', child1.tag)
+    self.assertEqual('b == "3"', child1.data)
+    self.assertTrue(child1.has_children())
+    self.assertEqual(1, len(child1.get_children()))
+
+    child2 = child1.get_children()[0]
+    self.assertIsInstance(child2, nodes.TextNode)
+    self.assertEqual('content', child2.data)
+    self.assertFalse(child2.has_children())
+

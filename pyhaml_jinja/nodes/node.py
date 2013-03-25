@@ -67,15 +67,18 @@ class Node(object):
     if index < len(self.parent.get_children()) - 1:
       return self.parent.get_children()[index + 1]
 
+  def get_indent(self, indent_string, indent_level):
+    return indent_level * (indent_string or '')
+
   def render_lines(self, indent_string=None, indent_level=0):
     """Render the node as a tree, returning a list of lines."""
 
     lines = []
     start, end = self.render_start(), self.render_end()
-    indent = indent_level * (indent_string or '')
+    indent = self.get_indent(indent_string, indent_level)
 
     if start is not None:
-      lines.append(indent + self.render_start())
+      lines.append(indent + start)
 
     for child in self.get_children():
       child_lines = child.render_lines(indent_string=indent_string,
@@ -83,16 +86,16 @@ class Node(object):
       lines.extend(child_lines)
 
     if end is not None:
-      lines.append(indent + self.render_end())
+      lines.append(indent + end)
 
     return lines
 
-  def render_start(self):
+  def render_start(self, indent=None):
     """Render the string representation of the opening of this node."""
 
     return None
 
-  def render_end(self):
+  def render_end(self, indent=None):
     """Render the string representation of the closing of this node."""
 
     return None

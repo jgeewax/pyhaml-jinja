@@ -209,3 +209,20 @@ class TestParserBuildTree(unittest2.TestCase):
     lines = tree.render_lines()
     self.assertEqual(['{% extends "base.haml" %}', 'text'], lines)
 
+  def test_tree_jinja_tag_followed_by_html_tag(self):
+    source = (
+        '%html\n'
+        '  -for item in items\n'
+        '    #{item}\n'
+        '  -else\n'
+        '    Empty\n'
+        '  %div(a="1", \\ \n'
+        '       b="2")\n'
+        )
+    tree = Parser.build_tree(source)
+    self.assertIsInstance(tree, nodes.Node)
+    lines = tree.render_lines()
+    self.assertEqual(['<html>', '{% for item in items %}', '{{ item }}',
+                      '{% else %}', 'Empty', '{% endfor %}',
+                      '<div a="1" b="2">', '</div>', '</html>'], lines)
+
