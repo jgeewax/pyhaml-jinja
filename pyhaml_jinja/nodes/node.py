@@ -68,6 +68,8 @@ class Node(object):
       return self.parent.get_children()[index + 1]
 
   def get_indent(self, indent_string, indent_level):
+    """Determine the indentation string for this line."""
+
     return indent_level * (indent_string or '')
 
   def render_lines(self, indent_string=None, indent_level=0):
@@ -90,12 +92,12 @@ class Node(object):
 
     return lines
 
-  def render_start(self, indent=None):
+  def render_start(self):
     """Render the string representation of the opening of this node."""
 
     return None
 
-  def render_end(self, indent=None):
+  def render_end(self):
     """Render the string representation of the closing of this node."""
 
     return None
