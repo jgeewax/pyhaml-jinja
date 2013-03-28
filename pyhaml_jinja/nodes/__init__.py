@@ -9,6 +9,7 @@ from pyhaml_jinja.nodes.empty_node import EmptyNode
 from pyhaml_jinja.nodes.text_node import TextNode, PreformattedTextNode
 
 # Complex nodes
-from pyhaml_jinja.nodes.html_node import HtmlNode, SelfClosingHtmlNode, HtmlCommentNode
+from pyhaml_jinja.nodes.html_node import (
+    HtmlNode, SelfClosingHtmlNode, HtmlCommentNode)
 from pyhaml_jinja.nodes.jinja_node import JinjaNode, SelfClosingJinjaNode
 
