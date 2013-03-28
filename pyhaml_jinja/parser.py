@@ -90,19 +90,21 @@ class Parser(object):
     of whitespace beforehand.
     """
     if not line:
-      return nodes.EmptyNode()
+      node = nodes.EmptyNode()
     elif line[0] in (cls.HTML_TAG_PREFIX, '.', '#'):
-      return nodes.HtmlNode.from_haml(line)
+      node = nodes.HtmlNode.from_haml(line)
     elif line[0] in (cls.HTML_COMMENT_PREFIX, ):
-      return nodes.HtmlCommentNode(line[1:])
+      node = nodes.HtmlCommentNode(line[1:])
     elif line[0] in (cls.JINJA_TAG_PREFIX, ):
-      return nodes.JinjaNode.from_haml(line)
+      node = nodes.JinjaNode.from_haml(line)
     elif line[0] in (cls.PREFORMATTED_PREFIX, ):
-      return nodes.PreformattedTextNode(line[1:])
+      node = nodes.PreformattedTextNode(line[1:])
     elif line[0] in (cls.ESCAPE_PREFIX, ):
-      return nodes.TextNode(line[1:])
+      node = nodes.TextNode(line[1:])
     else:
-      return nodes.TextNode(line)
+      node = nodes.TextNode(line)
+
+    return node
 
   @classmethod
   def get_indent_level(cls, line):
