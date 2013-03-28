@@ -33,7 +33,7 @@ setup(
   py_modules=['pyhaml_jinja'],
   install_requires=['Jinja2'],
   zip_safe=True,
-  keywords = "jinja2 templates haml html",
+  keywords="jinja2 templates haml html",
   platforms='any',
   classifiers=[
       'Development Status :: 4 - Beta',
