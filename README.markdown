@@ -169,14 +169,14 @@ becomes
 
 ### Jinja variables
 
-Wherever you would use `{{ ... }}}` user `#{...}`:
+Wherever you would use `{{ ... }}}` use `#{...}`:
 
-    %div #{user}
+    %div #{my_var}
 
 becomes
 
     <div>
-      {{ user }}
+      {{ my_var }}
     </div>
 
 ### All your old tags are still valid -- the HAML is just gravy
