@@ -9,9 +9,7 @@ class TestParserBuildTree(unittest2.TestCase):
 
   def test_empty(self):
     tree = Parser.build_tree('')
-    self.assertTrue(tree.has_children())
-    self.assertEqual(1, len(tree.get_children()))
-    self.assertIsInstance(tree.get_children()[0], nodes.EmptyNode)
+    self.assertFalse(tree.has_children())
 
   def test_single_child(self):
     source = ('%div')
@@ -65,6 +63,21 @@ class TestParserBuildTree(unittest2.TestCase):
     self.assertEqual(['<div a="1" b="2">', '<h1>', 'heading 1', '</h1>', '<p>',
                       '<span>', '<b>', 'bold nested', '</b>', '</span>',
                       '</p>', '</div>'], lines)
+
+  def test_line_continuation_in_if_statement(self):
+    source = (
+        '-if True\n'
+        '  %link(a="1", \\\n'
+        '        b="2")\n'
+        '  %script(c="3")\n'
+        '-else\n'
+        '  %link(d="4")\n'
+        )
+    tree = Parser.build_tree(source)
+    lines = tree.render_lines()
+    self.assertEqual(['{% if True %}', '<link a="1" b="2" />',
+                      '<script c="3">','</script>', '{% else %}',
+                      '<link d="4" />', '{% endif %}'], lines)
 
   def test_tree_text(self):
     source = (

@@ -39,7 +39,6 @@ class Parser(object):
         raise TemplateSyntaxError(exception.message, line_number)
 
       if isinstance(node, nodes.EmptyNode):
-        node_stack[-1].add_child(node)
         continue
 
       # If this was a nested line, we should have a chain of single children
