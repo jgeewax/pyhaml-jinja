@@ -121,7 +121,8 @@ class HtmlNode(Node):
     content = (match.group('content') or '').strip()
     if content:
       if not node.children_allowed():
-        raise ValueError('Inline content not permitted on %s' % node)
+        raise ValueError('Inline content ("%s") not permitted on node %s' % (
+          content, node))
       node.add_child(TextNode(content))
 
     return node
