@@ -44,42 +44,63 @@ class JinjaNode(Node):
   def from_haml(cls, haml):
     """Given a line of HAML markup parse it into a Jinja node."""
 
-    # Handle nested tags on the same line by splitting into chunks and
-    # processing each line separately, then appending down the tree.
-    if ':' in haml:
-      root = None
-      parent = None
-
-      for line in re.split(r':\s+', haml):
-        # This needs to be here to avoid circular imports.
-        from pyhaml_jinja.parser import Parser
-        child = Parser.parse_line(line)
-
-        if not root:
-          root = child
-
-        if parent:
-          # This may raise an exception if it turns out that parent is not
-          # permitted to have children.
-          parent.add_child(child)
-
-        parent = child
-
-      return root
-
     match = cls.TAG_REGEX.match(haml)
     if not match:
       raise ValueError('Text did not match %s' % cls.TAG_REGEX.pattern)
 
     # Create the node with the proper tag.
     tag = match.group('tag')
+    if tag in cls.SELF_CLOSING_TAGS:
+      node = SelfClosingJinjaNode(tag=tag)
+    else:
+      node = cls(tag=tag)
+
     data = (match.group('data') or '').strip()
 
-    if tag in cls.SELF_CLOSING_TAGS:
-      node = SelfClosingJinjaNode(tag=tag, data=data)
-    else:
-      node = cls(tag=tag, data=data)
+    # To handle nested expressions, we need to be sure that colons are only
+    # split apart when they aren't inside brackets, braces, or quotes (both
+    # single and double).
+    # To do this, we'll just go through "data" and keep a stack of where we
+    # are. The first colon we find that is outside the stack is a splitter.
+    stack = []
+    chars = {
+        '[': ']',
+        '(': ')',
+        '{': '}',
+        '\'': '\'',
+        '"': '"',
+        }
 
+    for index, char in enumerate(data):
+      # If we found a colon and the stack is empty, treat it as the splitter
+      # for a nested tag. Split, re-parse the rest, attach as a child, and
+      # update data to what it should be. Then break out of the loop.
+      if not stack and char == ':':
+        from pyhaml_jinja.parser import Parser
+        child = Parser.parse_line(data[index+1:].strip())
+        node.add_child(child)
+        data = data[:index]
+        break
+
+      # If we might be able to close an open tag.
+      if char in chars.values():
+        # The stack is not empty and this tag closes it.
+        if stack and char == stack[-1]:
+          stack.pop()
+          continue
+
+        # The stack is not empty, but this tag didn't close it, AND it's not a
+        # valid opener. Throw an error.
+        elif stack and char not in chars.keys():
+          raise ValueError('Found unexpected closing tag "%s".' % char)
+
+      # If we're opening, add the proper closing tag to the stack.
+      if char in chars.keys():
+        stack.append(chars.get(char))
+
+      # TODO: Figure out what we do with backslash escaping characters.
+
+    node.data = data
     return node
 
   def is_extending(self, node):

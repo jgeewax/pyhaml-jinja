@@ -19,6 +19,7 @@ class HtmlNode(Node):
       r'(?P<tag>\w+)'  # tag name is required
       r'(?P<shortcut_attrs>[\.#][^()]+?)?'  # .cls1.cls2#id is optional
       r'(?P<attrs>\(.+\))?'  # (a="1", b="2") are optional
+      r'(?P<nested>:)?' # Nesting is optional
       r'(?P<content>\s+.+)?'  # Inline-content is optional
       r'$'  # End of the line
   )
@@ -54,29 +55,6 @@ class HtmlNode(Node):
     # You can omit the % if and only if the line starts with a '.' or '#'.
     if haml and not haml.startswith('%') and haml[0] in ('.', '#'):
       haml = '%div' + haml
-
-    # Handle nested tags on the same line by splitting into chunks and
-    # processing each line separately, then appending down the tree.
-    if re.match(r'^[^\s]+:\s+', haml):
-      root = None
-      parent = None
-
-      for line in re.split(r':\s+', haml):
-        # This needs to be here to avoid circular imports.
-        from pyhaml_jinja.parser import Parser
-        child = Parser.parse_line(line)
-
-        if not root:
-          root = child
-
-        if parent:
-          # This may raise an exception if it turns out that parent is not
-          # permitted to have children.
-          parent.add_child(child)
-
-        parent = child
-
-      return root
 
     match = cls.TAG_REGEX.match(haml)
     if not match:
@@ -118,8 +96,23 @@ class HtmlNode(Node):
         node.add_attribute(key, value[1:-1])
 
     # Handle in-line content.
+    nested = (match.group('nested') or False)
     content = (match.group('content') or '').strip()
-    if content:
+
+    # If we have nested tags, there should definitely be content.
+    if nested and not content:
+      raise ValueError('Illegal nesting of tags.')
+
+    # If we are nesting tags, parse the content as a separate HAML line and
+    # append the parsed child to the current node.
+    if nested:
+      from pyhaml_jinja.parser import Parser
+      child = Parser.parse_line(content.strip())
+      node.add_child(child)
+
+    # If we aren't nesting and just have content, append it to the node if
+    # possible.
+    elif content:
       if not node.children_allowed():
         raise ValueError('Inline content ("%s") not permitted on node %s' % (
           content, node))

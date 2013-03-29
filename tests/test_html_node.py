@@ -119,6 +119,14 @@ class TestHtmlNode(unittest2.TestCase):
     self.assertEqual('a', node.tag)
     self.assertEqual({'href': '{{ my_func(val) }}'}, node.attributes)
 
+  def test_from_haml_with_style_attributes(self):
+    haml = '.cls(style="height: 50px;")'
+    node = nodes.HtmlNode.from_haml(haml)
+    self.assertIsInstance(node, nodes.HtmlNode)
+    self.assertEqual('div', node.tag)
+    self.assertEqual({'class': 'cls', 'style': 'height: 50px;'},
+                     node.attributes)
+
   def test_from_haml_with_inline_content(self):
     haml = '%div inline content'
     node = nodes.HtmlNode.from_haml(haml)
@@ -178,6 +186,11 @@ class TestHtmlNode(unittest2.TestCase):
     child = node.get_children()[0]
     self.assertIsInstance(child, nodes.TextNode)
     self.assertEqual('my inline text: is here', child.data)
+
+  def test_from_haml_invalid_nesting(self):
+    haml = '%div: %div:'
+    with self.assertRaises(ValueError):
+      node = nodes.HtmlNode.from_haml(haml)
 
   def test_from_haml_nested_with_inline_content(self):
     haml = '%div: %div inline content'
