@@ -18,7 +18,7 @@ class HtmlNode(Node):
       r'%'  # % is required
       r'(?P<tag>\w+)'  # tag name is required
       r'(?P<shortcut_attrs>[\.#][^()]+?)?'  # .cls1.cls2#id is optional
-      r'(?P<attrs>\(.+?\))?'  # (a="1", b="2") are optional
+      r'(?P<attrs>\(.+\))?'  # (a="1", b="2") are optional
       r'(?P<content>\s+.+)?'  # Inline-content is optional
       r'$'  # End of the line
   )
@@ -110,6 +110,7 @@ class HtmlNode(Node):
       # Splits apart by commas, but not commas within quotes.
       attr_pairs = re.compile(r'(?:[^,"]|"[^"]*")+').findall(attrs[1:-1])
       if any(_.count('"') != 2 for _ in attr_pairs):
+        raise Exception(attr_pairs)
         raise ValueError('Mismatched quotes (or missing comma) in attributes!')
 
       # Breaks pair strings into [(key, value), ...].

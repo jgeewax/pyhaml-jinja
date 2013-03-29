@@ -112,6 +112,13 @@ class TestHtmlNode(unittest2.TestCase):
     self.assertEqual('div', node.tag)
     self.assertEqual({'a': '1', 'b': 'with, commas'}, node.attributes)
 
+  def test_from_haml_with_attrs_with_jinja_function(self):
+    haml = '%a(href="{{ my_func(val) }}")'
+    node = nodes.HtmlNode.from_haml(haml)
+    self.assertIsInstance(node, nodes.HtmlNode)
+    self.assertEqual('a', node.tag)
+    self.assertEqual({'href': '{{ my_func(val) }}'}, node.attributes)
+
   def test_from_haml_with_inline_content(self):
     haml = '%div inline content'
     node = nodes.HtmlNode.from_haml(haml)
