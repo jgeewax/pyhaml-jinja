@@ -110,7 +110,6 @@ class HtmlNode(Node):
       # Splits apart by commas, but not commas within quotes.
       attr_pairs = re.compile(r'(?:[^,"]|"[^"]*")+').findall(attrs[1:-1])
       if any(_.count('"') != 2 for _ in attr_pairs):
-        raise Exception(attr_pairs)
         raise ValueError('Mismatched quotes (or missing comma) in attributes!')
 
       # Breaks pair strings into [(key, value), ...].
