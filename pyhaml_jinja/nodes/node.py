@@ -11,8 +11,24 @@ class Node(object):
     self.children = []
 
   def __repr__(self):
-    return '<{node_type}: {children} children>'.format(
-        node_type=self.__class__.__name__, children=len(self.get_children()))
+    start = self.render_start() or self.__class__.__name__
+    num_children = len(self.get_children())
+
+    if num_children == 0:
+      children_string = '(no children)'
+    elif num_children == 1:
+      children_string ='(1 child)'
+    elif num_children > 1:
+      children_string += '(%s children)' % num_children
+
+    # Get rid of leading and trailing <>'s.
+    if start.startswith('<'):
+      start = start[1:]
+
+    if start.endswith('>'):
+      start = start[:-1]
+
+    return '<%s>' % ' '.join([start, children_string]).strip()
 
   def get_children(self):
     """Return the list of child nodes."""
@@ -28,7 +44,9 @@ class Node(object):
     """Safely add a child node to this node."""
 
     if not self.children_allowed():
-      raise RuntimeError('Child nodes are not allowed on this node.')
+      raise RuntimeError('Child nodes are not allowed on this node. Cannot'
+                         ' add child {child} to parent {parent}'.format(
+                           child=child, parent=self))
 
     if not isinstance(child, Node):
       raise ValueError('Expected a Node, got %s.' % type(child))
