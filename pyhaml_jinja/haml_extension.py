@@ -2,6 +2,7 @@
 
 import os.path
 
+from jinja2 import TemplateSyntaxError
 from jinja2.ext import Extension
 
 from pyhaml_jinja.renderer import Renderer
@@ -30,9 +31,12 @@ class HamlExtension(Extension):
         self.environment.haml_file_extensions):
       return source
 
-    renderer = Renderer(source,
-        indent_string=self.environment.haml_indent_string,
-        newline_string=self.environment.haml_newline_string)
+    try:
+      renderer = Renderer(source,
+          indent_string=self.environment.haml_indent_string,
+          newline_string=self.environment.haml_newline_string)
+    except TemplateSyntaxError, e:
+      raise TemplateSyntaxError(e.message, e.lineno, name=name, filename=filename)
 
     return renderer.render()
 
