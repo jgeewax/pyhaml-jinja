@@ -106,3 +106,16 @@ class TestJinjaNode(unittest2.TestCase):
     self.assertEqual('content', child3.data)
     self.assertFalse(child3.has_children())
 
+  def test_from_haml_nested_tags_empty_data(self):
+    haml = '-customtag: foo'
+    node = nodes.JinjaNode.from_haml(haml)
+    self.assertIsInstance(node, nodes.JinjaNode)
+    self.assertEqual('customtag', node.tag)
+    self.assertEqual('', node.data)
+    self.assertTrue(node.has_children())
+    self.assertEqual(1, len(node.get_children()))
+
+    child = node.get_children()[0]
+    self.assertIsInstance(child, nodes.TextNode)
+    self.assertEqual('foo', child.data)
+

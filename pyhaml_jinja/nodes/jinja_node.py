@@ -15,7 +15,7 @@ class JinjaNode(Node):
       r'^'  # Start of the line
       r'-'  # - is required
       r'(?P<tag>\w+)'  # Tag name is required
-      r'(?P<data>\s+.+)?'  # Data is optional
+      r'(?P<data>:?\s+.+)?'  # Data is optional
       r'$'  # End of the line
   )
 
