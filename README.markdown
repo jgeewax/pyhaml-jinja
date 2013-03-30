@@ -1,10 +1,13 @@
-# pyhaml_jinja
+# PyHaml Jinja
+
+Haml-style syntax for Jinja2 templates
 
 ## NOT FOR PRODUCTION USE
 
-This package isn't quite ready for production.
-
-Please report lots of bugs via the issue tracker.
+This package is still very young and
+therefore not quite ready for production.
+Please report lots of bugs via the issue tracker so that it might become
+something production ready.
 
 ## Overview
 
