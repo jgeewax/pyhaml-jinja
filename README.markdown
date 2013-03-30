@@ -17,6 +17,13 @@ It is a pre-processor,
 meaning it takes a HAML source file,
 and outputs a template to be further processed by Jinja.
 
+## Installation
+
+Use `pip` or `easy_install` to install this package:
+
+    $ easy_install pip # If you don't already have it.
+    $ pip install pyhaml-jinja
+
 ## Usage
 
 To use this extension, add it to you Jinja environment and use the ".haml" 

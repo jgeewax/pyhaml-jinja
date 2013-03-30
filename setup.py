@@ -9,9 +9,9 @@ Example::
 
     -block title: Page title
 
-    -block content:
+    -block content
       %ul.list#users
-        -for user in users:
+        -for user in users
           %li
             %a(href="#{user.url}") #{user.username}
 
@@ -30,7 +30,7 @@ setup(
   author='JJ Geewax',
   author_email='jj@geewax.org',
   url='http://github.com/jgeewax/pyhaml-jinja',
-  py_modules=['pyhaml_jinja'],
+  packages=['pyhaml_jinja'],
   install_requires=['Jinja2'],
   zip_safe=True,
   keywords="jinja2 templates haml html",
