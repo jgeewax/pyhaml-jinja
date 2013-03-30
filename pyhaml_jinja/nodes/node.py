@@ -65,6 +65,18 @@ class Node(object):
 
     return True
 
+  def has_ancestor_of_type(self, NodeType):
+    """Determine whether this node has an ancestor of the given type."""
+
+    node = self.parent
+    while node:
+      if isinstance(node, NodeType):
+        return True
+      else:
+        node = node.parent
+
+    return False
+
   def get_previous_sibling(self):
     """Get the sibling previous to this node, if it exists."""
 

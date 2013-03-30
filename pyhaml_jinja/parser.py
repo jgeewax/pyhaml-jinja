@@ -16,6 +16,7 @@ class Parser(object):
   JINJA_TAG_PREFIX = '-'  # Use hypens to start Jinja code.
   PREFORMATTED_PREFIX = '|'  # Use pipes to distinguish preformatted lines.
   ESCAPE_PREFIX = '\\'  # Backslash to use a special prefix character.
+  CUSTOM_BLOCK_PREFIX = ':'  # Use colon to start custom block nodes.
 
   def __init__(self, source):
     self.source = source
@@ -33,28 +34,20 @@ class Parser(object):
 
     for line_number, line in enumerate(source_lines, start=1):
 
-      try:
-        node = cls.parse_line(line.strip())
-      except Exception, exception:
-        raise TemplateSyntaxError(exception.message, line_number)
-
-      if isinstance(node, nodes.EmptyNode):
+      # Ignore all the blank (or whitespace only) lines.
+      if not line.strip():
         continue
 
-      # If this was a nested line, we should have a chain of single children
-      # for as many levels as nested tags.
-      child = node
-      while child.has_children():
-        child = child.get_children()[0]
-
+      # Figure out how far indented the current line is.
       try:
         indent = cls.get_indent_level(line)
       except Exception, exception:
         raise TemplateIndentationError(exception.message, line_number)
 
+      # Either increase the indentation level, or pop nodes off to
+      # de-dent.
       if indent > indent_stack[-1]:
         indent_stack.append(indent)
-
       else:
         while indent < indent_stack[-1]:
           indent_stack.pop()
@@ -62,12 +55,36 @@ class Parser(object):
 
         node_stack.pop()
 
+      # If the top of the indent stack isn't the same as this line, then
+      # something went wrong.
       if indent != indent_stack[-1]:
         raise TemplateIndentationError(
             'Unindent does not match any outer indentation level!',
             line_number)
 
+      # The top of the node stack is what we'll consider the 'parent'.
       parent_node = node_stack[-1]
+
+      # If we are part of a custom block, don't try to parse anything but
+      # instead treat it all as text.
+      if (isinstance(parent_node, nodes.CustomBlockNode) or
+          parent_node.has_ancestor_of_type(nodes.CustomBlockNode)):
+        node = nodes.TextNode(line.strip())
+
+      # Otherwise, turn this line into a proper Node.
+      else:
+        try:
+          node = cls.parse_line(line.strip())
+        except Exception, exception:
+          raise TemplateSyntaxError(exception.message, line_number)
+
+      # If this was a nested line, we should have a chain of single children
+      # for as many levels as nested tags.
+      # 'child' should be the node we put on the top of the node stack, and
+      # 'node' should be appended to the current node stack.
+      child = node
+      while child.has_children():
+        child = child.get_children()[0]
 
       # If children aren't allowed and we're indenting, throw an error.
       if not parent_node.children_allowed():
@@ -96,6 +113,8 @@ class Parser(object):
       node = nodes.HtmlCommentNode(line[1:])
     elif line[0] in (cls.JINJA_TAG_PREFIX, ):
       node = nodes.JinjaNode.from_haml(line)
+    elif line[0] in (cls.CUSTOM_BLOCK_PREFIX, ):
+      node = nodes.CustomBlockNode(line[1:])
     elif line[0] in (cls.PREFORMATTED_PREFIX, ):
       node = nodes.PreformattedTextNode(line[1:])
     elif line[0] in (cls.ESCAPE_PREFIX, ):

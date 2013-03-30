@@ -239,3 +239,15 @@ class TestParserBuildTree(unittest2.TestCase):
                       '{% else %}', 'Empty', '{% endfor %}',
                       '<div a="1" b="2">', '</div>', '</html>'], lines)
 
+  def test_tree_special_block_tag_javascript(self):
+    source = (
+        ':javascript\n'
+        '  ..\n'
+        '    .###.1\n'
+        '%div content\n'
+        )
+    tree = Parser.build_tree(source)
+    self.assertIsInstance(tree, nodes.Node)
+    lines = tree.render_lines()
+    self.assertEqual(['<script type="text/javascript">', '..', '.###.1',
+                      '</script>', '<div>', 'content', '</div>'], lines)

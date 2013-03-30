@@ -17,6 +17,16 @@ It is a pre-processor,
 meaning it takes a HAML source file,
 and outputs a template to be further processed by Jinja.
 
+## Usage
+
+To use this extension, add it to you Jinja environment and use the ".haml" 
+extension for your template files.
+
+    from jinja2 import Environment
+    from pyhaml_jinja import HamlExtension
+
+    env = Environment(extensions=[HamlExtension])
+
 ## Syntax
 
 ### Tags
@@ -149,6 +159,27 @@ becomes
       {% This is a comment %}
       <!-- This is a comment -->
     </div>
+
+### Special blocks
+
+For Javascript, plain-text, or CSS (so far...) use `:javascript`, `:plain`, and `:css`:
+
+    :javascript
+      alert('hi');
+    :css
+      body { border: none; }
+    :plain
+      text
+
+becomes
+
+    <script type="text/javascript">
+      alert('hi');
+    </script>
+    <style type="text/css">
+      body { border: none; }
+    </style>
+    text
 
 ### Jinja tags
 

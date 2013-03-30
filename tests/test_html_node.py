@@ -119,6 +119,21 @@ class TestHtmlNode(unittest2.TestCase):
     self.assertEqual('a', node.tag)
     self.assertEqual({'href': '{{ my_func(val) }}'}, node.attributes)
 
+  def test_from_haml_with_attrs_jinja_function_with_args(self):
+    haml = '%a(href="{{ uri_for(\'name\', arg=val) }}")'
+    node = nodes.HtmlNode.from_haml(haml)
+    self.assertIsInstance(node, nodes.HtmlNode)
+    self.assertEqual('a', node.tag)
+    self.assertEqual({'href': '{{ uri_for(\'name\', arg=val) }}'},
+                     node.attributes)
+
+  def test_from_haml_with_attrs_jinja_conditional(self):
+    haml = '%a(class="{{ \'active\' if True }}")'
+    node = nodes.HtmlNode.from_haml(haml)
+    self.assertIsInstance(node, nodes.HtmlNode)
+    self.assertEqual('a', node.tag)
+    self.assertEqual({'class': '{{ \'active\' if True }}'}, node.attributes)
+
   def test_from_haml_with_style_attributes(self):
     haml = '.cls(style="height: 50px;")'
     node = nodes.HtmlNode.from_haml(haml)

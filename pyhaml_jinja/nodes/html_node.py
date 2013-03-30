@@ -90,8 +90,9 @@ class HtmlNode(Node):
       if any(_.count('"') != 2 for _ in attr_pairs):
         raise ValueError('Mismatched quotes (or missing comma) in attributes!')
 
-      # Breaks pair strings into [(key, value), ...].
-      attr_pairs = [pair.strip().split('=') for pair in attr_pairs]
+      # Breaks pair strings into [(key, value), ...] but only split apart by
+      # the first equal sign.
+      attr_pairs = [pair.strip().split('=', 1) for pair in attr_pairs]
       for (key, value) in attr_pairs:
         node.add_attribute(key, value[1:-1])
 
