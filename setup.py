@@ -20,17 +20,17 @@ For more information read the
 """
 
 
-from setuptools import setup
+from setuptools import find_packages, setup
 
 setup(
   name='pyhaml-jinja',
-  version='0.1-dev',
+  version='0.12-dev',
   description='Haml-style syntax for Jinja2 templates',
   long_description=__doc__,
   author='JJ Geewax',
   author_email='jj@geewax.org',
   url='http://github.com/jgeewax/pyhaml-jinja',
-  packages=['pyhaml_jinja'],
+  packages=find_packages(),
   install_requires=['Jinja2'],
   zip_safe=True,
   keywords="jinja2 templates haml html",

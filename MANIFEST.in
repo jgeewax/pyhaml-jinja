@@ -1,0 +1,4 @@
+include LICENSE
+include README.markdown
+recursive-exclude tests *
+
