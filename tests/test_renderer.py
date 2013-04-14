@@ -46,5 +46,18 @@ class TestRenderer(unittest2.TestCase):
       '  text2\n'
       '</div>'
       ), html)
-  pass
+
+  def test_with_preformatted(self):
+    source = (
+        '%pre\n'
+        '  |line1\n'
+        '  |line2\n'
+        )
+    renderer = Renderer(source, newline_string='\n', indent_string='  ')
+    html = renderer.render()
+    self.assertEqual((
+      '<pre>'
+      'line1\n'
+      'line2\n'
+      '</pre>'), html)
 

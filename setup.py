@@ -32,6 +32,7 @@ setup(
   url='http://github.com/jgeewax/pyhaml-jinja',
   packages=find_packages(),
   install_requires=['Jinja2'],
+  tests_require=['unittest2'],
   zip_safe=True,
   keywords="jinja2 templates haml html",
   platforms='any',
