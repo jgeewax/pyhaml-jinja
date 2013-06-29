@@ -29,7 +29,7 @@ Use `pip` or `easy_install` to install this package:
 
 ## Usage
 
-To use this extension, add it to you Jinja environment and use the ".haml" 
+To use this extension, add it to you Jinja environment and use the ".haml"
 extension for your template files.
 
     from jinja2 import Environment
@@ -242,3 +242,15 @@ becomes
       text
     {% endif -%}
 
+You can also do some whitespace control in HAML tags using a hyphen (`-`).
+For example:
+
+    %-a(href="#") Condensed
+    %a(href="#") Spaced
+
+becomes
+
+    <a href="#">Condensed</a>
+    <a href="#">
+      Spaced
+    </a>

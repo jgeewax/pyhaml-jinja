@@ -14,21 +14,23 @@ class HtmlNode(Node):
   """Represents a standard HTML node with a tag, attributes, and children."""
 
   TAG_REGEX = re.compile(
-      r'^'  # Start of the line
-      r'%'  # % is required
-      r'(?P<tag>\w+)'  # tag name is required
-      r'(?P<shortcut_attrs>[\.#][^()]+?)?'  # .cls1.cls2#id is optional
-      r'(?P<attrs>\(.+\))?'  # (a="1", b="2") are optional
-      r'(?P<nested>:)?' # Nesting is optional
-      r'(?P<content>\s+.+)?'  # Inline-content is optional
-      r'$'  # End of the line
+      r'^'  # Start of the line.
+      r'%'  # % is required.
+      r'(?P<condensed>-)?'  # The - optionally signifies a condensed tag.
+      r'(?P<tag>\w+)'  # tag name is required.
+      r'(?P<shortcut_attrs>[\.#][^()]+?)?'  # .cls1.cls2#id is optional.
+      r'(?P<attrs>\(.+\))?'  # (a="1", b="2") are optional.
+      r'(?P<nested>:)?' # Nesting is optional.
+      r'(?P<content>\s+.+)?'  # Inline-content is optional.
+      r'$'  # End of the line.
   )
 
   SELF_CLOSING_TAGS = ['br', 'hr', 'img', 'input', 'link', 'meta']
 
-  def __init__(self, tag, attributes=None):
+  def __init__(self, tag, attributes=None, condensed=False):
     self.tag = tag
     self.attributes = attributes or {}
+    self.condensed = condensed
     super(HtmlNode, self).__init__()
 
   def add_attribute(self, key, value):
@@ -60,13 +62,16 @@ class HtmlNode(Node):
     if not match:
       raise ValueError('Text did not match %s' % cls.TAG_REGEX.pattern)
 
-    # Create the node with the proper tag
+    # Create the node with the proper tag.
     tag = match.group('tag')
 
     if tag in cls.SELF_CLOSING_TAGS:
       node = SelfClosingHtmlNode(tag=tag)
     else:
       node = cls(tag=tag)
+
+    # Update the condensed property on the node.
+    node.condensed = (match.group('condensed') == '-')
 
     # Handle shortcut attributes ('.cls#id')
     shortcut_attrs = match.group('shortcut_attrs')
@@ -146,6 +151,22 @@ class HtmlNode(Node):
 
   def render_end(self):
     return '</{tag}>'.format(tag=self.tag)
+
+  def render_lines(self, *args, **kwargs):
+    lines = super(HtmlNode, self).render_lines(*args, **kwargs)
+    if self.condensed:
+      # Check if we have at least two items and condense the first two.
+      if len(lines) >= 2:
+        first, second = lines[:2]
+        del lines[0]
+        lines[0] = first.rstrip() + second.lstrip()
+
+      # Check if we still have at least two items and condense the last two.
+      if len(lines) >= 2:
+        first, second = lines[-2:]
+        del lines[-1]
+        lines[-1] = first.rstrip() + second.lstrip()
+    return lines
 
 
 class SelfClosingHtmlNode(HtmlNode, ChildlessNode):

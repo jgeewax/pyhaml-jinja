@@ -47,6 +47,42 @@ class TestRenderer(unittest2.TestCase):
       '</div>'
       ), html)
 
+  def test_with_newlines_indentation_and_condensing(self):
+    source = (
+        '%-div\n'
+        '  %p text\n'
+        '  text2\n'
+        )
+    renderer = Renderer(source, newline_string='\n', indent_string='  ')
+    html = renderer.render()
+    self.assertEqual((
+      '<div><p>\n'
+      '    text\n'
+      '  </p>\n'
+      '  text2</div>'
+      ), html)
+
+  def test_with_hyperlink_condensed(self):
+    source = (
+        '%-div\n'
+        '  %p text\n'
+        '  text2\n'
+        '  %-a(href="#") link\n'
+        '  %div content'
+        )
+    renderer = Renderer(source, newline_string='\n', indent_string='  ')
+    html = renderer.render()
+    self.assertEqual((
+      '<div><p>\n'
+      '    text\n'
+      '  </p>\n'
+      '  text2\n'
+      '  <a href="#">link</a>\n'
+      '  <div>\n'
+      '    content\n'
+      '  </div></div>'
+      ), html)
+
   def test_with_preformatted(self):
     source = (
         '%pre\n'
