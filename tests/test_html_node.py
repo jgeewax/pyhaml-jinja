@@ -142,6 +142,10 @@ class TestHtmlNode(unittest2.TestCase):
     self.assertEqual({'class': 'cls', 'style': 'height: 50px;'},
                      node.attributes)
 
+  def test_from_haml_with_weird_quoted_attributes(self):
+    haml = '%option(value="foo" selected=selected)'
+    self.assertRaises(ValueError, nodes.HtmlNode.from_haml, haml)
+
   def test_from_haml_with_inline_content(self):
     haml = '%div inline content'
     node = nodes.HtmlNode.from_haml(haml)

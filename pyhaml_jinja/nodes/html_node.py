@@ -99,6 +99,9 @@ class HtmlNode(Node):
       # the first equal sign.
       attr_pairs = [pair.strip().split('=', 1) for pair in attr_pairs]
       for (key, value) in attr_pairs:
+        if not value.startswith('"') or not value.endswith('"'):
+          raise ValueError(
+              'Invalid attribute provided: "%s" for key "%s"' % (value, key))
         node.add_attribute(key, value[1:-1])
 
     # Handle in-line content.
